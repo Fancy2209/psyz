@@ -15,6 +15,7 @@ struct EXEC {
     unsigned long sp, fp, gp, ret, base;
 };
 
+extern int InitPAD(char * unk00, int unk01, char* unk02, int unk03);
 extern void InitCARD(long val);
 extern long StartCARD(void);
 extern long StopCARD(void);

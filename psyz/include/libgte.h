@@ -22,6 +22,62 @@ typedef struct {
     u_char r, g, b; // Color palette
     u_char cd;      // GPU code
 } CVECTOR;
+	       
+typedef struct {		/* 2D short vector */
+	short vx, vy;
+} DVECTOR;
+
+
+typedef struct {		
+	SVECTOR v;		/* Object(Local) 3D Vertex 	*/
+	VECTOR sxyz;		/* Screen 3D Vertex		*/
+	DVECTOR sxy;		/* Screen 2D Vertex		*/
+	CVECTOR rgb;		/* Vertex Color Data	 	*/
+	short txuv,pad;		/* Texture Mapping Data 	*/
+	long chx,chy;		/* Clip Window Data 		*/
+} EVECTOR;
+
+typedef struct {
+	SVECTOR v;
+	u_char uv[2]; u_short pad;	/*  */  
+	CVECTOR c;
+	DVECTOR sxy;		
+	u_long  sz;		/* clip z-data */		
+} RVECTOR;			/* division vertex data vector */
+
+
+typedef struct {
+	RVECTOR r01,r12,r20;
+	RVECTOR	*r0,*r1,*r2;
+	u_long *rtn;
+} CRVECTOR3;			/* recursive vector for triangles */
+
+typedef struct {
+	u_long 	ndiv;		/* number of divisions */
+	u_long 	pih,piv;	/* clipping area */
+	u_short clut,tpage;
+	CVECTOR	rgbc;
+	u_long	*ot;
+	RVECTOR r0,r1,r2;
+	CRVECTOR3 cr[5];	
+} DIVPOLYGON3;			/* division buffer for triangles */
+
+typedef struct {
+	RVECTOR r01,r02,r31,r32,rc;
+	RVECTOR	*r0,*r1,*r2,*r3;
+	u_long *rtn;
+} CRVECTOR4;			/* recursive vector for four-sided polygons */
+
+typedef struct {
+	u_long 	ndiv;		/* number of divisions */
+	u_long 	pih,piv;	/* clipping area */
+	u_short clut,tpage;
+	CVECTOR	rgbc;
+	u_long	*ot;
+	RVECTOR r0,r1,r2,r3;
+	CRVECTOR4 cr[5];	
+} DIVPOLYGON4;			/* division buffer for four-sided polygons */
+
 
 MATRIX* RotMatrix(SVECTOR* r, MATRIX* m);
 void SetGeomOffset(long ofx, long ofy);
