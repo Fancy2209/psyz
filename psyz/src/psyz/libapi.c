@@ -7,6 +7,15 @@
 int MyVSync(int mode);
 int VSync(int mode) { return MyVSync(mode); }
 
+long InitPAD(char* bufA, char* bufB, long lenA, long lenB) {
+    NOT_IMPLEMENTED;
+    return 1;
+}
+long StartPAD(void) { NOT_IMPLEMENTED; }
+void StopPAD(void) { NOT_IMPLEMENTED; }
+
+void _96_remove(void) { NOT_IMPLEMENTED; }
+
 long SetRCnt(unsigned long a, unsigned short b, long c) { NOT_IMPLEMENTED; }
 
 long ReadInitPadFlag(void) {

@@ -16,6 +16,11 @@ void _bu_init(void) {
 #endif
 }
 
+long _card_auto(long val) {
+    NOT_IMPLEMENTED;
+    return val;
+}
+
 long _card_info(long chan) {
     NOT_IMPLEMENTED;
     return 0;

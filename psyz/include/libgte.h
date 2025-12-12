@@ -24,8 +24,11 @@ typedef struct {
 } CVECTOR;
 
 typedef struct {
-	short vx, vy;
+    short vx, vy;
 } DVECTOR;
+
+long AverageZ3(long sz0, long sz1, long sz2);
+long AverageZ4(long sz0, long sz1, long sz2, long sz3);
 
 MATRIX* RotMatrix(SVECTOR* r, MATRIX* m);
 void SetGeomOffset(long ofx, long ofy);

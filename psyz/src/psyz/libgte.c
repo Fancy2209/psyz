@@ -81,3 +81,18 @@ long RotAverageNclip4(
     NOT_IMPLEMENTED;
     return 1;
 }
+
+long RotTransPers(SVECTOR* v0, long* sxy, long* p, long* flag) {
+    NOT_IMPLEMENTED;
+    return 1;
+}
+
+long AverageZ3(long sz0, long sz1, long sz2) {
+    // TODO we could leverage 64-bit long to avoid casting to double
+    return (long)(((double)sz0 + (double)sz1 + (double)sz2) / 3);
+}
+
+long AverageZ4(long sz0, long sz1, long sz2, long sz3) {
+    // TODO we could leverage 64-bit long to avoid casting to double
+    return (long)(((double)sz0 + (double)sz1 + (double)sz2 + (double)sz3) / 3);
+}

@@ -18,6 +18,9 @@ struct EXEC {
 extern void InitCARD(long val);
 extern long StartCARD(void);
 extern long StopCARD(void);
+extern long InitPAD(char* bufA, char* bufB, long lenA, long lenB);
+extern long StartPAD(void);
+extern void StopPAD(void);
 extern void _bu_init(void);
 extern long _card_info(long chan);
 extern long _card_clear(long chan);
