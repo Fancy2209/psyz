@@ -198,8 +198,7 @@ static int psyz_clr(RECT* pRect, u32 color) {
     clear_cmd.code[1] = 0xE4FFFFFF; // set drawing area bottom right
     clear_cmd.code[2] = 0xE5000000; // set drawing offset
     clear_cmd.code[3] = 0xE6000000;
-    clear_cmd.code[4] =
-        0xE1000000 | GPU_STATUS & 0x7FF | (color >> 0x1F) << 10;
+    clear_cmd.code[4] = 0xE1000000 | GPU_STATUS & 0x7FF | (color >> 0x1F) << 10;
     clear_cmd.code[5] = (color & 0xFFFFFF) | 0x02000000;
     clear_cmd.code[6] = *(u_long*)&rect.x;
     clear_cmd.code[7] = *(u_long*)&rect.w;

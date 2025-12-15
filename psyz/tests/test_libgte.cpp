@@ -100,3 +100,4 @@ TEST_F(gte_Test, square_root_12) {
     EXPECT_EQ(SquareRoot12(0x10000), 0x4000);
     EXPECT_EQ(SquareRoot12(0x10000000), 0x100000);
 }
+

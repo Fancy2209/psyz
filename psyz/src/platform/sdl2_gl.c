@@ -146,7 +146,7 @@ enum TexKind {
     Num_Tex,
 };
 
-static u16 g_RawVram[VRAM_W * VRAM_H];
+static u16 g_RawVram[VRAM_W * VRAM_H]; // RGBA5551 VRAM image
 static SDL_Window* window = NULL;
 static SDL_GLContext glContext = NULL;
 static GLuint fb[2] = {0, 0};
@@ -1051,6 +1051,25 @@ void Draw_LoadImage(PS1_RECT* rect, u_long* p) {
         vram += VRAM_W;
     }
     is_vram_texture_invalid = true;
+
+    // loading to a portion of the VRAM bound to the display means we're
+    // effectively blitting straight to the screen, bypassing the GPU.
+    // Used in Rayman 1 to display the Ubisoft logo.
+    int fbidx = GuessFrameBuffer(rect->x, rect->y);
+    if (fbidx >= 0) {
+        // Upload the framebuffer region from g_RawVram to the GL framebuffer
+        // texture so the loaded image data is visible on screen. We need to
+        // flip Y-axis since OpenGL textures have origin at bottom-left
+        // while PS1 VRAM has origin at top-left
+        PS1_RECT* fb_rect = &fbrect[fbidx];
+        glBindTexture(GL_TEXTURE_2D, fbtex[fbidx]);
+        for (int y = 0; y < cur_wnd_height; y++) {
+            u16* row_src = g_RawVram + fb_rect->x +
+                           (fb_rect->y + cur_wnd_height - 1 - y) * VRAM_W;
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y, cur_wnd_width, 1, GL_RGBA,
+                            GL_UNSIGNED_SHORT_1_5_5_5_REV, row_src);
+        }
+    }
 }
 void Draw_StoreImage(PS1_RECT* rect, u_long* p) {
     u16* mem = (u16*)p;

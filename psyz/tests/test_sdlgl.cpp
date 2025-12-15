@@ -12,6 +12,7 @@ void Psyz_GetWindowSize(int* width, int* height);
 }
 
 #include "res/4bpp.h"
+#include "res/16bpp.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -374,4 +375,14 @@ TEST_F(SDLGL_Test, moveimage) {
     VSync(0);
     PutDispEnv(&cdb->disp);
     AssertFrame("moveimage", 0.9979);
+}
+
+TEST_F(SDLGL_Test, blit) {
+    TIM_IMAGE tim;
+    RECT rect = {16, 16, 64, 64};
+    OpenTIM((u_long*)img_16bpp);
+    ReadTIM(&tim);
+    LoadImage(&rect, tim.paddr);
+    VSync(0);
+    AssertFrame("blit", 0.9979);
 }
