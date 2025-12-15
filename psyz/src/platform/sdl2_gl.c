@@ -1064,19 +1064,42 @@ void Draw_MoveImage(PS1_RECT* rect, unsigned int x, unsigned int y) {
     if (rect->x == x && rect->y == y) {
         return;
     }
-    if (rect->y < y) {
-        src += rect->x + (rect->y + rect->h - 1) * VRAM_W;
-        dst += x + (y + rect->h - 1) * VRAM_W;
-        for (int i = 0; i < rect->h; i++) {
-            memmove(dst, src, rect->w * sizeof(u16));
+
+    int src_x = CLAMP(rect->x, 0, VRAM_W - 1);
+    int src_y = CLAMP(rect->y, 0, VRAM_H - 1);
+    int src_w = CLAMP(rect->w, 0, VRAM_W - src_x);
+    int src_h = CLAMP(rect->h, 0, VRAM_H - src_y);
+    int dst_x = CLAMP((int)x, 0, VRAM_W - 1);
+    int dst_y = CLAMP((int)y, 0, VRAM_H - 1);
+    int copy_w = CLAMP(src_w, 0, VRAM_W - dst_x);
+    int copy_h = CLAMP(src_h, 0, VRAM_H - dst_y);
+
+    if (src_x != rect->x || src_y != rect->y || src_w != rect->w ||
+        src_h != rect->h || dst_x != (int)x || dst_y != (int)y ||
+        copy_w != src_w || copy_h != src_h) {
+        WARNF("params out of bounds: src=(%d,%d,%d,%d)->(%d,%d,%d,%d) "
+              "dst=(%d,%d)->(%d,%d)",
+              rect->x, rect->y, rect->w, rect->h, src_x, src_y, src_w, src_h,
+              (int)x, (int)y, dst_x, dst_y);
+    }
+
+    if (copy_w <= 0 || copy_h <= 0) {
+        WARNF("nothing to copy");
+        return;
+    }
+    if (src_y < dst_y) {
+        src += src_x + (src_y + copy_h - 1) * VRAM_W;
+        dst += dst_x + (dst_y + copy_h - 1) * VRAM_W;
+        for (int i = 0; i < copy_h; i++) {
+            memmove(dst, src, copy_w * sizeof(u16));
             src -= VRAM_W;
             dst -= VRAM_W;
         }
     } else {
-        src += rect->x + rect->y * VRAM_W;
-        dst += x + y * VRAM_W;
-        for (int i = 0; i < rect->h; i++) {
-            memmove(dst, src, rect->w * sizeof(u16));
+        src += src_x + src_y * VRAM_W;
+        dst += dst_x + dst_y * VRAM_W;
+        for (int i = 0; i < copy_h; i++) {
+            memmove(dst, src, copy_w * sizeof(u16));
             src += VRAM_W;
             dst += VRAM_W;
         }
