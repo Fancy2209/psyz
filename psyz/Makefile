@@ -20,4 +20,4 @@ test:
 	@mkdir -p $(TEST_DIR)
 	cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -S tests/ -B $(TEST_DIR)
 	cmake --build $(TEST_DIR)
-	cd $(TEST_DIR) && ./psyz_tests
+	cd $(TEST_DIR) && SDL_VIDEODRIVER=offscreen ./psyz_tests
