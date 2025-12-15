@@ -127,6 +127,9 @@ int GPU_Enqueue(u_long p1, u_long p2) {
     DR_ENV* env = (DR_ENV*)p1;
     while (1) {
         if (queue_len + env->len > LEN(queue_buf)) {
+            if (env->len > 0x100) {
+                ERRORF("packet 0x%X long, likely corrupted", env->len);
+            }
             INFOF("GPU queue full, calling exeque");
             psyz_exeque();
         } else if (sizeof(u_long) == 4) {
@@ -144,7 +147,7 @@ int GPU_Enqueue(u_long p1, u_long p2) {
                 for (u_long i = 0; i < env->len; i++) {
                     queue_buf[queue_len + i] = prim_data[i];
                 }
-            } else {
+            } else if (env->len > 0) {
                 // TODO this is a temporary solution:
                 // if gpu commands get merged with primitives, this will not
                 // work

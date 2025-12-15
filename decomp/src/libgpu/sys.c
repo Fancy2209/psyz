@@ -99,7 +99,11 @@ static struct Debug info = {0};
 int D_800B89A8[] = {1024, 1024, 1024, 1024, 1024};
 int D_800B89BC[] = {512, 1024, 1024, 512, 1024};
 u_long move_image[] = {(4 << 24) | 0xFFFFFF, 0x80000000, 0, 0, 0};
+#if __psyz
+u_long D_800B89E4[] = {0xFFFFFF, 4, 0, 0, 0, 0};
+#else
 u_long D_800B89E4[] = {(4 << 24) | 0xFFFFFF, 0, 0, 0, 0};
+#endif
 volatile u_long* GPU_DATA = (u_long*)0x1F801810;
 volatile u_long* GPU_STATUS = (u_long*)0x1F801814;           // stat
 volatile u_long** DMA2_MADR = (volatile u_long**)0x1F8010A0; // madr
@@ -125,10 +129,8 @@ extern u_char _que[0x1800];
 
 #ifdef __psyz
 #define GPU_PSX_PTR(x) ((u_long*)x)
-#define TERM_PRIM(ot, p) termPrim(ot)
 #else
 #define GPU_PSX_PTR(x) (u_long*)((u_long)x & 0xFFFFFF)
-#define TERM_PRIM(ot, p) *ot = (u_long)p & 0xFFFFFF
 #endif
 
 #ifndef CLAMP
@@ -313,7 +315,12 @@ OT_TYPE* ClearOTag(OT_TYPE* ot, int n) {
         setaddr(ot, ot + 1);
         ot++;
     }
-    TERM_PRIM(ot, D_800B89E4);
+#ifdef __psyz
+    setaddr(ot, D_800B89E4);
+    setlen(ot, 0);
+#else
+    *ot = (u_long)D_800B89E4 & 0xFFFFFF;
+#endif
     return ot;
 }
 
@@ -323,7 +330,12 @@ OT_TYPE* ClearOTagR(OT_TYPE* ot, int n) {
     }
 
     D_800B8920->otc(ot, n);
-    TERM_PRIM(ot, D_800B89E4);
+#ifdef __psyz
+    setaddr(ot, D_800B89E4);
+    setlen(ot, 0);
+#else
+    *ot = (u_long)D_800B89E4 & 0xFFFFFF;
+#endif
     return ot;
 }
 
