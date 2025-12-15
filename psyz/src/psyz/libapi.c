@@ -7,11 +7,45 @@
 int MyVSync(int mode);
 int VSync(int mode) { return MyVSync(mode); }
 
+// https://problemkaputt.de/psxspx-controllers-communication-sequence.htm
+typedef enum {
+    PAD_KIND_MOUSE = 0x12,
+    PAD_KIND_DIGITAL_PAD = 0x41,
+    PAD_KIND_ANALOG_STICK = 0x53,
+    PAD_KIND_ANALOG_PAD = 0x73,
+    PAD_KIND_KEYBOARD = 0x96,
+    PAD_KIND_DISCONNECTED = 0xFF,
+} PadKind;
+
 long InitPAD(char* bufA, char* bufB, long lenA, long lenB) {
+    if (bufA) {
+        memset(bufA, 0, lenA);
+        if (lenA >= 2) {
+            bufA[0] = 0;
+            bufA[1] = PAD_KIND_DIGITAL_PAD;
+        } else {
+            WARNF("bufA len too small");
+        }
+    } else {
+        WARNF("bufA is NULL");
+    }
+    if (bufB) {
+        memset(bufB, 0, lenB);
+        if (lenB >= 2) {
+            bufB[0] = 0;
+            bufB[1] = PAD_KIND_DISCONNECTED;
+        } else {
+            WARNF("bufB len too small");
+        }
+    } else {
+        WARNF("bufB is NULL");
+    }
+    return 1;
+}
+long StartPAD(void) {
     NOT_IMPLEMENTED;
     return 1;
 }
-long StartPAD(void) { NOT_IMPLEMENTED; }
 void StopPAD(void) { NOT_IMPLEMENTED; }
 
 void _96_remove(void) { NOT_IMPLEMENTED; }
