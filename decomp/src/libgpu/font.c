@@ -2,7 +2,7 @@
 #include <libgte.h>
 #include <libgpu.h>
 
-typedef struct Font {
+struct Font {
     TILE tile;
     DR_MODE draw_mode;
     /*0x1C*/ u32 capacity;

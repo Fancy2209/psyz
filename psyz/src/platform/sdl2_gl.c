@@ -228,7 +228,7 @@ static int cur_disp_horiz = -1;
 static int cur_disp_vert = -1;
 static int fb_w = 0, fb_h = 0;
 
-static void QuitPlatform(void);
+static void QuitPlatformAtExit(void);
 static bool is_window_visible = false;
 static bool is_platform_initialized = false;
 static bool is_platform_init_successful = false;
@@ -239,7 +239,7 @@ bool InitPlatform() {
     // avoid re-initializing it continuously on failures
     is_platform_initialized = true;
 
-    atexit(QuitPlatform);
+    atexit(QuitPlatformAtExit);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         ERRORF("SDL_Init: %s", SDL_GetError());
         return false;
@@ -367,11 +367,17 @@ static void PresentBufferToScreen(unsigned int index) {
     SDL_GL_SwapWindow(window);
 }
 
-static void QuitPlatform() {
+static void QuitPlatformAtExit() {
     if (glContext) {
         SDL_GL_DestroyContext(glContext);
         glContext = NULL;
     }
+}
+
+static void QuitPlatform() {
+    QuitPlatformAtExit();
+    // for some reason, the functions below cannot be called by atexit,
+    // or it will cause a segfault while on Wayland.
     if (window) {
         SDL_DestroyWindow(window);
         window = NULL;
