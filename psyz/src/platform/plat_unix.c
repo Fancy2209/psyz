@@ -82,17 +82,35 @@ static void populate_entry(
 
 typedef struct {
     char base_dir[1024];
-    DIR* dir;
-    struct dirent* last_entry;
+    struct dirent** entries;
+    int entry_count;
+    int current_index;
 } DIRENTRY_RESERVED;
 static DIRENTRY_RESERVED singleton_dir = {0};
-static bool is_filesearch_handle_open() { return singleton_dir.dir != NULL; }
+
+static int filter_regular_files(const struct dirent* entry) {
+    if (entry->d_name[0] == '.') {
+        return 0;
+    }
+    if (entry->d_type != DT_REG) {
+        return 0;
+    }
+    return 1;
+}
+
+static bool is_filesearch_handle_open() {
+    return singleton_dir.entries != NULL;
+}
 static void close_filesearch_handle() {
     if (is_filesearch_handle_open()) {
-        closedir(singleton_dir.dir);
+        for (int i = 0; i < singleton_dir.entry_count; i++) {
+            free(singleton_dir.entries[i]);
+        }
+        free(singleton_dir.entries);
         singleton_dir.base_dir[0] = '\0';
-        singleton_dir.dir = NULL;
-        singleton_dir.last_entry = NULL;
+        singleton_dir.entries = NULL;
+        singleton_dir.entry_count = 0;
+        singleton_dir.current_index = 0;
     }
 }
 static DIRENTRY_RESERVED* open_filesearch_handle(const char* basePath) {
@@ -101,32 +119,36 @@ static DIRENTRY_RESERVED* open_filesearch_handle(const char* basePath) {
               singleton_dir.base_dir);
         close_filesearch_handle();
     }
-    strncpy(singleton_dir.base_dir, basePath, sizeof(singleton_dir.base_dir));
-    singleton_dir.dir = opendir(singleton_dir.base_dir);
-    if (singleton_dir.dir) {
-        struct dirent* entry;
-        do {
-            entry = readdir(singleton_dir.dir);
-            if (!entry) {
-                close_filesearch_handle();
-                return NULL;
-            }
-        } while (entry->d_name[0] == '.' || entry->d_type != DT_REG);
-        singleton_dir.last_entry = entry;
-    }
-    return (DIRENTRY_RESERVED*)&singleton_dir;
-}
-static struct dirent* read_filesearch_handle() {
-    if (!singleton_dir.dir) {
+    strncpy(
+        singleton_dir.base_dir, basePath, sizeof(singleton_dir.base_dir) - 1);
+    singleton_dir.base_dir[sizeof(singleton_dir.base_dir) - 1] = '\0';
+
+    // Use scandir to read and sort all entries alphabetically
+    singleton_dir.entry_count =
+        scandir(singleton_dir.base_dir, &singleton_dir.entries,
+                filter_regular_files, alphasort);
+    if (singleton_dir.entry_count < 0) {
+        singleton_dir.entries = NULL;
+        singleton_dir.entry_count = 0;
         return NULL;
     }
-    struct dirent* cur = singleton_dir.last_entry;
-    if (!cur) {
+    if (singleton_dir.entry_count == 0) {
+        free(singleton_dir.entries);
+        singleton_dir.entries = NULL;
+        return NULL;
+    }
+    singleton_dir.current_index = 0;
+    return &singleton_dir;
+}
+static struct dirent* read_filesearch_handle() {
+    if (!singleton_dir.entries) {
+        return NULL;
+    }
+    if (singleton_dir.current_index >= singleton_dir.entry_count) {
         close_filesearch_handle();
         return NULL;
     }
-    singleton_dir.last_entry = readdir(singleton_dir.dir);
-    return cur;
+    return singleton_dir.entries[singleton_dir.current_index++];
 }
 struct DIRENTRY* my_firstfile(char* dirPath, struct DIRENTRY* firstEntry) {
     char basePath[0x100];
@@ -149,16 +171,12 @@ struct DIRENTRY* my_nextfile(struct DIRENTRY* outEntry) {
         return NULL;
     }
     struct dirent* entry = read_filesearch_handle();
-    while (entry) {
-        if (entry->d_type != DT_REG) {
-            entry = read_filesearch_handle();
-            continue;
-        }
-        DIRENTRY_RESERVED* handle = &singleton_dir;
-        populate_entry(handle->base_dir, outEntry, entry);
-        return outEntry;
+    if (!entry) {
+        return NULL;
     }
-    return NULL;
+    DIRENTRY_RESERVED* handle = &singleton_dir;
+    populate_entry(handle->base_dir, outEntry, entry);
+    return outEntry;
 }
 
 long my_format(char* fs) {
@@ -168,16 +186,23 @@ long my_format(char* fs) {
     path_end = strlen(path);
     DEBUGF("format('%s')", fs);
     DIR* dir = opendir(path);
+    if (!dir) {
+        ERRORF("failed to open directory '%s'", path);
+        return 0;
+    }
     struct dirent* entry;
     while ((entry = readdir(dir)) != 0) {
         if (entry->d_type != DT_REG) {
             continue;
         }
-        strncpy(path + path_end, entry->d_name, sizeof(path) - path_end);
+        strncpy(path + path_end, entry->d_name, sizeof(path) - path_end - 1);
+        path[sizeof(path) - 1] = '\0';
         if (remove(path)) {
+            closedir(dir);
             return 0;
         }
     }
+    closedir(dir);
     return 1;
 }
 

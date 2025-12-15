@@ -30,7 +30,14 @@ static struct EvCB events[0x100] = {0};
 static long GetFirstFreeEvent() {
     // event_first_empty brings the function to O(1) in an optimistic scenario,
     // but it does not guarantee it always points to an empty event
+    // Search from event_first_empty to end
     for (unsigned long i = event_first_empty; i < LEN(events); i++) {
+        if (!events[i].desc) {
+            return (long)i;
+        }
+    }
+    // Search from beginning to event_first_empty (wrap around)
+    for (unsigned long i = 0; i < event_first_empty; i++) {
         if (!events[i].desc) {
             return (long)i;
         }
@@ -95,6 +102,10 @@ long OpenEvent(unsigned long desc, long spec, long mode, long (*func)()) {
         WARNF("unsupported spec:%08X, desc:%04X, mode:%04X", spec, desc, mode);
     }
     event_first_empty = id + 1;
+    // Wrap around if event_first_empty is beyond array bounds
+    if (event_first_empty >= LEN(events)) {
+        event_first_empty = 0;
+    }
     return id;
 }
 long CloseEvent(unsigned long event) {

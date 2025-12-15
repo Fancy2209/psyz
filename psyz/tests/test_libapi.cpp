@@ -15,8 +15,7 @@ class bu_Test : public testing::Test {
             d[i] = val;
             val += inc;
         }
-        char buf[8192];
-        assert(fwrite(buf, 1, sizeof(buf), f) == sizeof(buf));
+        assert(fwrite(d, 1, len, f) == len);
         assert(fclose(f) == 0);
         free(d);
     }
