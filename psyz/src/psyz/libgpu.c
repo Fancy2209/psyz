@@ -191,30 +191,18 @@ static int psyz_clr(RECT* pRect, u32 color) {
     RECT rect = *pRect;
     rect.w = CLAMP(pRect->w, 0, w - 1);
     rect.h = CLAMP(pRect->h, 0, h - 1);
-    if (rect.x & 0x3F || rect.w & 0x3F) {
-        // unaligned clear
-        setlen(&clear_cmd, 8);
-        termPrim(&clear_cmd);
-        clear_cmd.code[0] = 0xE3000000; // set drawing area top left
-        clear_cmd.code[1] = 0xE4FFFFFF; // set drawing area bottom right
-        clear_cmd.code[2] = 0xE5000000; // set drawing offset
-        clear_cmd.code[3] = 0xE6000000;
-        clear_cmd.code[4] =
-            0xE1000000 | GPU_STATUS & 0x7FF | (color >> 0x1F) << 10;
-        clear_cmd.code[5] = (color & 0xFFFFFF) | 0x60000000;
-        clear_cmd.code[6] = *(u_long*)&rect.x;
-        clear_cmd.code[7] = *(u_long*)&rect.w;
-    } else {
-        // aligned clear
-        setlen(&clear_cmd, 5);
-        termPrim(&clear_cmd);
-        clear_cmd.code[0] = 0xE6000000; // mask bit setting
-        clear_cmd.code[1] =
-            0xE1000000 | GPU_STATUS & 0x7FF | (color >> 0x1F) << 10;
-        clear_cmd.code[2] = (color & 0xFFFFFF) | 0x02000000;
-        clear_cmd.code[3] = *(u_long*)&rect.x;
-        clear_cmd.code[4] = *(u_long*)&rect.w;
-    }
+
+    setlen(&clear_cmd, 8);
+    termPrim(&clear_cmd);
+    clear_cmd.code[0] = 0xE3000000; // set drawing area top left
+    clear_cmd.code[1] = 0xE4FFFFFF; // set drawing area bottom right
+    clear_cmd.code[2] = 0xE5000000; // set drawing offset
+    clear_cmd.code[3] = 0xE6000000;
+    clear_cmd.code[4] =
+        0xE1000000 | GPU_STATUS & 0x7FF | (color >> 0x1F) << 10;
+    clear_cmd.code[5] = (color & 0xFFFFFF) | 0x02000000;
+    clear_cmd.code[6] = *(u_long*)&rect.x;
+    clear_cmd.code[7] = *(u_long*)&rect.w;
     GPU_Enqueue((u_long)&clear_cmd, 0);
     return 0;
 }

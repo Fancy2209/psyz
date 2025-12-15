@@ -71,6 +71,7 @@ class SDLGL_Test : public testing::Test {
         SetDispMask(1);
         RECT clearRect = {0, 0, 0x7FFF, 0x7FFF};
         ClearImage(&clearRect, 0, 0, 0);
+        DrawSync(0);
         cdb = &db[0];
     }
     void TearDown() override { ResetGraph(0); }
