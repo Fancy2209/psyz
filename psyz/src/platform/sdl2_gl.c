@@ -1057,18 +1057,36 @@ void Draw_LoadImage(PS1_RECT* rect, u_long* p) {
     // Used in Rayman 1 to display the Ubisoft logo.
     int fbidx = GuessFrameBuffer(rect->x, rect->y);
     if (fbidx >= 0) {
-        // Upload the framebuffer region from g_RawVram to the GL framebuffer
-        // texture so the loaded image data is visible on screen. We need to
-        // flip Y-axis since OpenGL textures have origin at bottom-left
-        // while PS1 VRAM has origin at top-left
+        static GLuint temp_tex = 0, temp_fb = 0;
+        if (!temp_tex) {
+            glGenTextures(1, &temp_tex);
+            glGenFramebuffers(1, &temp_fb);
+            glBindTexture(GL_TEXTURE_2D, temp_tex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, temp_fb);
+            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, temp_tex, 0);
+        }
+
+        // Upload VRAM data to temp texture (Y-flipped for OpenGL)
         PS1_RECT* fb_rect = &fbrect[fbidx];
-        glBindTexture(GL_TEXTURE_2D, fbtex[fbidx]);
+        glBindTexture(GL_TEXTURE_2D, temp_tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cur_wnd_width, cur_wnd_height,
+                     0, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL);
         for (int y = 0; y < cur_wnd_height; y++) {
             u16* row_src = g_RawVram + fb_rect->x +
                            (fb_rect->y + cur_wnd_height - 1 - y) * VRAM_W;
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y, cur_wnd_width, 1, GL_RGBA,
                             GL_UNSIGNED_SHORT_1_5_5_5_REV, row_src);
         }
+
+        // Blit scaled from temp FBO to actual framebuffer
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, temp_fb);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb[fbidx]);
+        glBlitFramebuffer(0, 0, cur_wnd_width, cur_wnd_height,
+                          0, 0, fb_w, fb_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, fb[fb_index]);
     }
 }
 void Draw_StoreImage(PS1_RECT* rect, u_long* p) {
