@@ -5,11 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#ifdef _MSC_VER
-#include <SDL.h>
-#include "glad/glad.h"
-
-#elif defined(__MINGW32__)
+#if defined(__MINGW32__) || defined(_MSC_VER)
 #include <SDL3/SDL.h>
 #include "glad/glad.h"
 
