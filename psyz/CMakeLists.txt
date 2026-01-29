@@ -14,6 +14,7 @@ set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
 
 option(GTE_USE_HW_SQRT "Use hardware-accelerated sqrt (C math library)" OFF)
+option(USE_IMGUI "Allows usage of Dear ImGUI" OFF)
 
 set(PSYZ_SOURCES
     src/platform/log.c
@@ -122,6 +123,20 @@ else()
     list(APPEND PSYZ_SOURCES src/platform/sdl3_gl.c)
     list(APPEND PSYZ_SOURCES src/platform/sdl3_audio.c)
     list(APPEND PSYZ_LIBS -lGL)
+endif()
+if(USE_IMGUI)
+    list(APPEND PSYZ_SOURCES 
+        ${CMAKE_CURRENT_SOURCE_DIR}/../external/cimgui/imgui/backends/imgui_impl_opengl3.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../external/cimgui/imgui/backends/imgui_impl_sdl3.cpp
+    )
+    list(APPEND PSYZ_LIBS cimgui)
+add_compile_definitions(CIMGUI_USE_OPENGL3 CIMGUI_USE_SDL3)
+add_subdirectory(
+        ${CMAKE_CURRENT_SOURCE_DIR}/../external/cimgui
+        ${CMAKE_CURRENT_BINARY_DIR}/cimgui
+        EXCLUDE_FROM_ALL)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../external/cimgui/imgui/backends)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../external/cimgui)
 endif()
 
 add_library(psyz STATIC ${PSYZ_SOURCES})

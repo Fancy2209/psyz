@@ -17,6 +17,13 @@
 
 #endif
 
+#define USE_IMGUI
+#ifdef USE_IMGUI
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include <cimgui.h>
+#include <cimgui_impl.h>
+#endif
+
 #ifdef _MSC_VER
 #define ALIGNAS(n) __declspec(align(n))
 #else
@@ -350,6 +357,19 @@ bool InitPlatform() {
         return false;
     }
 
+#ifdef USE_IMGUI
+    // Setup Dear ImGui context
+    igCreateContext(NULL);
+    //ImGuiIO& io = ImGui::GetIO();
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForOpenGL(window, glContext);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
+#endif
+
     INFOF("opengl %d.%d initialized", glVer_major, glVer_minor);
     glLineWidth((GLfloat)cur_wnd_scale);
     shader_program = Init_SetupShader();
@@ -410,6 +430,9 @@ void Psyz_SetTitle(const char* str) {
     }
 }
 
+#ifdef USE_IMGUI
+static bool do_imgui = false;
+#endif
 static void PresentBufferToScreen(void) {
     if (!window && !InitPlatform()) {
         return;
@@ -432,13 +455,29 @@ static void PresentBufferToScreen(void) {
     glBlitFramebuffer(src_x, src_y + src_h, src_x + src_w, src_y, 0, 0, fb_w,
                       fb_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glFinish(); // fix: black screen on Windows+Nvidia
+#ifdef USE_IMGUI
+    if(do_imgui) {
+        igRender();
+        ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
+    } else do_imgui = true;
+#endif
     SDL_GL_SwapWindow(window);
 
     glBindFramebuffer(GL_FRAMEBUFFER, vram_fbo);
     glEnable(GL_SCISSOR_TEST);
+#ifdef USE_IMGUI
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    igNewFrame();
+#endif
 }
 
 static void QuitPlatformAtExit() {
+#ifdef USE_IMGUI
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    igDestroyContext(NULL);
+#endif
     if (glContext) {
         SDL_GL_DestroyContext(glContext);
         glContext = NULL;
@@ -753,6 +792,9 @@ u_long MyPadRead(int id) {
 static void PollEvents(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+#ifdef USE_IMGUI
+        ImGui_ImplSDL3_ProcessEvent(&event); // Forward your event to backend
+#endif
         switch (event.type) {
         case SDL_EVENT_GAMEPAD_ADDED:
             AddGamepad(event.gdevice.which);
