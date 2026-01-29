@@ -360,10 +360,6 @@ bool InitPlatform() {
 #ifdef USE_IMGUI
     // Setup Dear ImGui context
     igCreateContext(NULL);
-    //ImGuiIO& io = ImGui::GetIO();
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForOpenGL(window, glContext);
@@ -459,7 +455,8 @@ static void PresentBufferToScreen(void) {
     if(do_imgui) {
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-    } else do_imgui = true;
+    } else 
+        do_imgui = true;
 #endif
     SDL_GL_SwapWindow(window);
 
