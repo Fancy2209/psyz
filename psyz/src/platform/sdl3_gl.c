@@ -452,10 +452,10 @@ static void PresentBufferToScreen(void) {
                       fb_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glFinish(); // fix: black screen on Windows+Nvidia
 #ifdef USE_IMGUI
-    if(do_imgui) {
+    if (do_imgui) {
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-    } else 
+    } else
         do_imgui = true;
 #endif
     SDL_GL_SwapWindow(window);
